@@ -79,7 +79,6 @@ export interface Usuario {
   apellido: string;
   dni: string;
   email?: string;
-  contraseña: string;
   rol: 'administrador' | 'usuario';
   fechaCreacion: Date;
   activo: boolean;

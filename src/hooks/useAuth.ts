@@ -1,7 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Usuario } from '../types';
 import { supabase } from '../lib/supabase';
-import type { Session, User as SupabaseUser } from '@supabase/supabase-js';
+import type { User as SupabaseUser } from '@supabase/supabase-js';
+
+export interface LoginResult {
+  success: boolean;
+  error?: string;
+}
 
 export const useAuth = () => {
   const [usuarioActual, setUsuarioActual] = useState<Usuario | null>(null);
@@ -54,7 +59,6 @@ export const useAuth = () => {
         apellido: usuarioData.apellido,
         dni: usuarioData.dni,
         email: usuarioData.email || undefined,
-        contraseña: '',
         rol: usuarioData.rol as 'administrador' | 'usuario',
         fechaCreacion: new Date(usuarioData.created_at),
         activo: usuarioData.activo,
@@ -66,8 +70,8 @@ export const useAuth = () => {
       };
 
       setUsuarioActual(usuario);
-    } catch (error) {
-      // Error al cargar perfil
+    } catch {
+      // Perfil no encontrado — la sesión queda activa pero sin perfil
     }
   };
 
@@ -135,7 +139,6 @@ export const useAuth = () => {
         apellido: u.apellido,
         dni: u.dni,
         email: u.email || undefined,
-        contraseña: '',
         rol: u.rol as 'administrador' | 'usuario',
         fechaCreacion: new Date(u.created_at),
         activo: u.activo,
@@ -147,8 +150,8 @@ export const useAuth = () => {
       }));
 
       setUsuarios(usuariosFormateados);
-    } catch (error) {
-      // Error al cargar usuarios
+    } catch {
+      // Error silencioso al cargar la lista de usuarios
     }
   };
 
@@ -170,7 +173,7 @@ export const useAuth = () => {
         activo: item.sector.activo,
         fechaCreacion: new Date(item.sector.created_at)
       }));
-    } catch (error) {
+    } catch {
       return [];
     }
   };
@@ -195,86 +198,35 @@ export const useAuth = () => {
         fechaCreacion: new Date(item.proyecto.created_at),
         fechaActualizacion: new Date(item.proyecto.updated_at)
       }));
-    } catch (error) {
+    } catch {
       return [];
     }
   };
 
-  const iniciarSesion = async (email: string, contraseña: string): Promise<boolean> => {
+  // Autenticación exclusivamente mediante Supabase Auth — nunca compara contraseñas en DB
+  const iniciarSesion = async (email: string, contraseña: string): Promise<LoginResult> => {
     try {
-      const { data: usuarioExiste, error: errorBusqueda } = await supabase
-        .from('usuarios')
-        .select('*')
-        .eq('email', email)
-        .eq('activo', true)
-        .maybeSingle();
+      const { error } = await supabase.auth.signInWithPassword({ email, password: contraseña });
 
-      if (errorBusqueda || !usuarioExiste) {
-        return false;
-      }
-
-      if (usuarioExiste.contraseña !== contraseña) {
-        return false;
-      }
-
-      if (!usuarioExiste.auth_id) {
-        try {
-          const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-            email,
-            password: contraseña,
-            options: {
-              data: {
-                nombre: usuarioExiste.nombre,
-                apellido: usuarioExiste.apellido,
-                dni: usuarioExiste.dni,
-                email: usuarioExiste.email
-              }
-            }
-          });
-
-          if (signUpError) throw signUpError;
-
-          if (signUpData.user) {
-            const { error: updateError } = await supabase
-              .from('usuarios')
-              .update({ auth_id: signUpData.user.id })
-              .eq('id', usuarioExiste.id);
-
-            if (updateError) throw updateError;
-          }
-        } catch (signUpErrorCatch) {
-          try {
-            const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-              email,
-              password: contraseña
-            });
-
-            if (signInError) throw signInError;
-
-            if (signInData.user && !usuarioExiste.auth_id) {
-              const { error: updateError } = await supabase
-                .from('usuarios')
-                .update({ auth_id: signInData.user.id })
-                .eq('id', usuarioExiste.id);
-
-              if (updateError) throw updateError;
-            }
-          } catch (signInErrorCatch) {
-            return false;
-          }
+      if (error) {
+        if (
+          error.message.includes('Invalid login credentials') ||
+          error.code === 'invalid_credentials'
+        ) {
+          return { success: false, error: 'Correo o contraseña incorrectos' };
         }
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password: contraseña
-        });
-
-        if (error) throw error;
+        if (error.message.includes('Email not confirmed')) {
+          return { success: false, error: 'Correo electrónico no confirmado. Contacte al administrador.' };
+        }
+        if (error.message.includes('Too many requests')) {
+          return { success: false, error: 'Demasiados intentos. Espere unos minutos e intente nuevamente.' };
+        }
+        return { success: false, error: 'Error al iniciar sesión. Intente nuevamente.' };
       }
 
-      return true;
-    } catch (error) {
-      return false;
+      return { success: true };
+    } catch {
+      return { success: false, error: 'Error de conexión. Verifique su conexión a internet.' };
     }
   };
 
@@ -283,132 +235,144 @@ export const useAuth = () => {
     setUsuarioActual(null);
   };
 
-  const crearUsuario = async (datosUsuario: Omit<Usuario, 'id' | 'fechaCreacion'>) => {
-    try {
-      const email = datosUsuario.email || `${datosUsuario.dni}@rotorc.com.ar`;
+  // Crea usuario usando el edge function con service role — evita cambiar la sesión del admin
+  const crearUsuario = async (
+    datosUsuario: Omit<Usuario, 'id' | 'fechaCreacion'> & { contraseña: string }
+  ) => {
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const { data: { session } } = await supabase.auth.getSession();
 
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
+    if (!session) throw new Error('La sesión expiró. Por favor, inicie sesión nuevamente.');
+
+    const response = await fetch(`${supabaseUrl}/functions/v1/crear-usuario`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${session.access_token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: datosUsuario.email,
         password: datosUsuario.contraseña,
-        options: {
-          data: {
-            nombre: datosUsuario.nombre,
-            apellido: datosUsuario.apellido,
-            dni: datosUsuario.dni,
-            email: email
-          }
-        }
-      });
+        nombre: datosUsuario.nombre,
+        apellido: datosUsuario.apellido,
+        dni: datosUsuario.dni,
+        rol: datosUsuario.rol,
+        moduloNovedades: datosUsuario.moduloNovedades,
+        moduloTareas: datosUsuario.moduloTareas,
+        activo: datosUsuario.activo,
+      })
+    });
 
-      if (authError) throw authError;
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Error al crear el usuario');
+    }
 
-      const { data, error } = await supabase
-        .from('usuarios')
-        .insert({
-          nombre: datosUsuario.nombre,
-          apellido: datosUsuario.apellido,
-          dni: datosUsuario.dni,
-          email: email,
-          contraseña: datosUsuario.contraseña,
-          rol: datosUsuario.rol,
-          modulo_novedades: datosUsuario.moduloNovedades,
-          modulo_tareas: datosUsuario.moduloTareas,
-          activo: datosUsuario.activo,
-          auth_id: authData.user?.id
-        })
-        .select()
-        .single();
+    const result = await response.json();
+    const nuevoUsuario: Usuario = {
+      id: result.usuario.id,
+      nombre: result.usuario.nombre,
+      apellido: result.usuario.apellido,
+      dni: result.usuario.dni,
+      email: result.usuario.email || undefined,
+      rol: result.usuario.rol as 'administrador' | 'usuario',
+      fechaCreacion: new Date(result.usuario.created_at),
+      activo: result.usuario.activo,
+      photoUrl: result.usuario.photo_url || undefined,
+      moduloNovedades: result.usuario.modulo_novedades ?? true,
+      moduloTareas: result.usuario.modulo_tareas ?? true,
+      sectores: [],
+      proyectos: []
+    };
 
-      if (error) {
-        if (error.code === '23505') {
-          throw new Error('Ya existe un usuario con ese DNI o correo electrónico');
-        }
-        throw error;
+    if (datosUsuario.sectores && datosUsuario.sectores.length > 0) {
+      const sectoresIds = datosUsuario.sectores.map(s => s.id);
+      await actualizarSectoresUsuario(nuevoUsuario.id, sectoresIds);
+      nuevoUsuario.sectores = datosUsuario.sectores;
+    }
+
+    if (datosUsuario.proyectos && datosUsuario.proyectos.length > 0) {
+      const proyectosIds = datosUsuario.proyectos.map(p => p.id);
+      await actualizarProyectosUsuario(nuevoUsuario.id, proyectosIds);
+      nuevoUsuario.proyectos = datosUsuario.proyectos;
+    }
+
+    setUsuarios(prev => [nuevoUsuario, ...prev]);
+    return nuevoUsuario;
+  };
+
+  // Actualiza perfil o credenciales via edge function con JWT del usuario — no almacena contraseña en DB
+  const actualizarUsuario = async (
+    id: string,
+    datosActualizados: Partial<Omit<Usuario, 'id' | 'fechaCreacion'>> & { contraseña?: string }
+  ) => {
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const { data: { session } } = await supabase.auth.getSession();
+
+    if (!session) throw new Error('La sesión expiró. Por favor, inicie sesión nuevamente.');
+
+    const response = await fetch(`${supabaseUrl}/functions/v1/actualizar-usuario`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${session.access_token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        usuarioId: id,
+        datos: datosActualizados
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Error al actualizar el usuario');
+    }
+
+    await cargarUsuarios();
+
+    if (usuarioActual && usuarioActual.id === id) {
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
+      if (currentSession) {
+        await cargarPerfilUsuario(currentSession.user);
       }
-
-      const nuevoUsuario: Usuario = {
-        id: data.id,
-        nombre: data.nombre,
-        apellido: data.apellido,
-        dni: data.dni,
-        email: data.email || undefined,
-        contraseña: '',
-        rol: data.rol as 'administrador' | 'usuario',
-        fechaCreacion: new Date(data.created_at),
-        activo: data.activo,
-        moduloNovedades: data.modulo_novedades,
-        moduloTareas: data.modulo_tareas,
-        sectores: [],
-        proyectos: []
-      };
-
-      if (datosUsuario.sectores && datosUsuario.sectores.length > 0) {
-        const sectoresIds = datosUsuario.sectores.map(s => s.id);
-        await actualizarSectoresUsuario(nuevoUsuario.id, sectoresIds);
-        nuevoUsuario.sectores = datosUsuario.sectores;
-      }
-
-      if (datosUsuario.proyectos && datosUsuario.proyectos.length > 0) {
-        const proyectosIds = datosUsuario.proyectos.map(p => p.id);
-        await actualizarProyectosUsuario(nuevoUsuario.id, proyectosIds);
-        nuevoUsuario.proyectos = datosUsuario.proyectos;
-      }
-
-      setUsuarios(prev => [nuevoUsuario, ...prev]);
-      return nuevoUsuario;
-    } catch (error) {
-      throw error;
     }
   };
 
-  const actualizarUsuario = async (id: string, datosActualizados: Partial<Omit<Usuario, 'id' | 'fechaCreacion'>>) => {
-    try {
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-      const apiUrl = `${supabaseUrl}/functions/v1/actualizar-usuario`;
-
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${supabaseAnonKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          usuarioId: id,
-          datos: datosActualizados
-        })
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Error al actualizar usuario');
-      }
-
-      await cargarUsuarios();
-
-      if (usuarioActual && usuarioActual.id === id) {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-          await cargarPerfilUsuario(session.user);
-        }
-      }
-    } catch (error) {
-      throw error;
-    }
-  };
-
+  // Solo actualiza datos de perfil (nombre, apellido, foto) del usuario actual
   const actualizarPerfil = async (datos: {
     nombre?: string;
     apellido?: string;
     photoUrl?: string;
-    contraseña?: string;
   }) => {
-    if (!usuarioActual) {
-      throw new Error('No hay usuario autenticado');
+    if (!usuarioActual) throw new Error('No hay usuario autenticado');
+    await actualizarUsuario(usuarioActual.id, datos);
+  };
+
+  // Cambia la contraseña del usuario actual verificando primero la contraseña actual
+  const cambiarContraseñaPropia = async (contraseñaActual: string, contraseñaNueva: string): Promise<void> => {
+    if (!usuarioActual?.email) throw new Error('No hay usuario autenticado');
+
+    // Verifica la contraseña actual re-autenticando con Supabase Auth
+    const { error: verifyError } = await supabase.auth.signInWithPassword({
+      email: usuarioActual.email,
+      password: contraseñaActual
+    });
+
+    if (verifyError) {
+      throw new Error('La contraseña actual es incorrecta');
     }
 
-    await actualizarUsuario(usuarioActual.id, datos);
+    // Actualiza la contraseña directamente en Supabase Auth
+    const { error: updateError } = await supabase.auth.updateUser({
+      password: contraseñaNueva
+    });
+
+    if (updateError) {
+      if (updateError.message.includes('Password should be at least')) {
+        throw new Error('La contraseña debe tener al menos 6 caracteres');
+      }
+      throw new Error('Error al cambiar la contraseña. Intente nuevamente.');
+    }
   };
 
   const desactivarUsuario = async (id: string) => {
@@ -505,6 +469,7 @@ export const useAuth = () => {
     crearUsuario,
     actualizarUsuario,
     actualizarPerfil,
+    cambiarContraseñaPropia,
     desactivarUsuario,
     esAdministrador,
     actualizarSectoresUsuario,

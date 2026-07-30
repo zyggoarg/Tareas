@@ -8,14 +8,15 @@ interface ProfileEditProps {
     nombre?: string;
     apellido?: string;
     photoUrl?: string;
-    contraseña?: string;
   }) => Promise<void>;
+  onCambiarContraseña: (contraseñaActual: string, contraseñaNueva: string) => Promise<void>;
   onCerrar: () => void;
 }
 
 export const ProfileEdit: React.FC<ProfileEditProps> = ({
   usuario,
   onActualizarPerfil,
+  onCambiarContraseña,
   onCerrar
 }) => {
   const [nombre, setNombre] = useState(usuario.nombre);
@@ -43,7 +44,7 @@ export const ProfileEdit: React.FC<ProfileEditProps> = ({
     }
 
     if (cambiarContraseña) {
-      if (!contraseñaActual || !contraseñaNueva) {
+      if (!contraseñaActual || !contraseñaNueva || !confirmarContraseña) {
         setError('Debe completar todos los campos de contraseña');
         return;
       }
@@ -53,13 +54,13 @@ export const ProfileEdit: React.FC<ProfileEditProps> = ({
         return;
       }
 
-      if (contraseñaNueva.length < 4) {
-        setError('La contraseña debe tener al menos 4 caracteres');
+      if (contraseñaNueva.length < 6) {
+        setError('La nueva contraseña debe tener al menos 6 caracteres');
         return;
       }
 
-      if (contraseñaActual !== usuario.contraseña) {
-        setError('La contraseña actual es incorrecta');
+      if (contraseñaNueva === contraseñaActual) {
+        setError('La nueva contraseña debe ser diferente a la actual');
         return;
       }
     }
@@ -67,25 +68,29 @@ export const ProfileEdit: React.FC<ProfileEditProps> = ({
     try {
       setCargando(true);
 
-      const datosActualizacion: any = {
+      // Actualizar datos de perfil (nombre, apellido, foto)
+      await onActualizarPerfil({
         nombre: nombre.trim(),
         apellido: apellido.trim(),
         photoUrl: photoUrl.trim() || undefined
-      };
+      });
 
+      // Cambiar contraseña por separado si fue solicitado
       if (cambiarContraseña && contraseñaNueva) {
-        datosActualizacion.contraseña = contraseñaNueva;
+        await onCambiarContraseña(contraseñaActual, contraseñaNueva);
+        setContraseñaActual('');
+        setContraseñaNueva('');
+        setConfirmarContraseña('');
+        setCambiarContraseña(false);
       }
 
-      await onActualizarPerfil(datosActualizacion);
       setExito('Perfil actualizado correctamente');
 
       setTimeout(() => {
         onCerrar();
       }, 1500);
     } catch (err) {
-      setError('Error al actualizar el perfil. Por favor, intente nuevamente.');
-      // Error
+      setError(err instanceof Error ? err.message : 'Error al actualizar el perfil. Por favor, intente nuevamente.');
     } finally {
       setCargando(false);
     }
@@ -140,9 +145,8 @@ export const ProfileEdit: React.FC<ProfileEditProps> = ({
                   <Camera className="w-5 h-5 text-white" />
                 </div>
               </div>
-
-             
             </div>
+
             <div className="space-y-4">
               <h4 className="font-medium text-gray-900">Información Personal</h4>
 
@@ -188,6 +192,21 @@ export const ProfileEdit: React.FC<ProfileEditProps> = ({
                   El DNI no puede ser modificado
                 </p>
               </div>
+
+              {usuario.email && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Correo Electrónico</label>
+                  <input
+                    type="text"
+                    value={usuario.email}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 cursor-not-allowed"
+                    disabled
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Para cambiar el correo, contacte al administrador
+                  </p>
+                </div>
+              )}
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Rol</label>
@@ -236,6 +255,7 @@ export const ProfileEdit: React.FC<ProfileEditProps> = ({
                         onChange={(e) => setContraseñaActual(e.target.value)}
                         className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         disabled={cargando}
+                        autoComplete="current-password"
                       />
                       <button
                         type="button"
@@ -259,6 +279,7 @@ export const ProfileEdit: React.FC<ProfileEditProps> = ({
                         onChange={(e) => setContraseñaNueva(e.target.value)}
                         className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         disabled={cargando}
+                        autoComplete="new-password"
                       />
                       <button
                         type="button"
@@ -268,6 +289,7 @@ export const ProfileEdit: React.FC<ProfileEditProps> = ({
                         {mostrarContraseñaNueva ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                       </button>
                     </div>
+                    <p className="text-xs text-gray-500 mt-1">Mínimo 6 caracteres</p>
                   </div>
 
                   <div>
@@ -282,6 +304,7 @@ export const ProfileEdit: React.FC<ProfileEditProps> = ({
                         onChange={(e) => setConfirmarContraseña(e.target.value)}
                         className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         disabled={cargando}
+                        autoComplete="new-password"
                       />
                       <button
                         type="button"

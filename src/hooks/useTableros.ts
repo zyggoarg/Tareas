@@ -7,7 +7,6 @@ const formatUsuario = (u: any): Usuario => ({
   nombre: u.nombre,
   apellido: u.apellido,
   dni: u.dni,
-  contraseña: u.contraseña || '',
   rol: u.rol as 'administrador' | 'usuario',
   fechaCreacion: new Date(u.created_at),
   activo: u.activo,
@@ -43,7 +42,7 @@ export const useTableros = (proyectoActivoId: string | null, usuarioActual: Usua
           *,
           proyecto:proyectos(id, nombre, descripcion, estado, activo, created_at, updated_at),
           sector:sectores(id, nombre, descripcion, activo, created_at),
-          creado_por:usuarios!tableros_creado_por_id_fkey(id, nombre, apellido, dni, contraseña, rol, activo, created_at, photo_url)
+          creado_por:usuarios!tableros_creado_por_id_fkey(id, nombre, apellido, dni, rol, activo, created_at, photo_url)
         `)
         .eq('proyecto_id', proyectoActivoId)
         .eq('activo', true)
@@ -77,8 +76,8 @@ export const useTableros = (proyectoActivoId: string | null, usuarioActual: Usua
           .from('tarjetas')
           .select(`
             *,
-            creado_por:usuarios!tarjetas_creado_por_id_fkey(id, nombre, apellido, dni, contraseña, rol, activo, created_at, photo_url),
-            asignado_a:usuarios!tarjetas_asignado_a_id_fkey(id, nombre, apellido, dni, contraseña, rol, activo, created_at, photo_url)
+            creado_por:usuarios!tarjetas_creado_por_id_fkey(id, nombre, apellido, dni, rol, activo, created_at, photo_url),
+            asignado_a:usuarios!tarjetas_asignado_a_id_fkey(id, nombre, apellido, dni, rol, activo, created_at, photo_url)
           `)
           .in('lista_id', listaIds)
           .eq('activo', true)
@@ -95,7 +94,7 @@ export const useTableros = (proyectoActivoId: string | null, usuarioActual: Usua
         const [asignadosRes, checklistRes] = await Promise.all([
           supabase
             .from('tarjeta_asignados')
-            .select('tarjeta_id, usuario:usuarios(id, nombre, apellido, dni, contraseña, rol, activo, created_at, photo_url)')
+            .select('tarjeta_id, usuario:usuarios(id, nombre, apellido, dni, rol, activo, created_at, photo_url)')
             .in('tarjeta_id', tarjetaIds),
           supabase
             .from('tarjeta_checklist')

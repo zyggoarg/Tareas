@@ -134,7 +134,7 @@ export const TarjetaDetallesModal = ({
   const recargarAdjuntos = async () => {
     const { data } = await supabase
       .from('tarjeta_adjuntos')
-      .select('*, usuario:usuarios(id, nombre, apellido, dni, contraseña, rol, activo, created_at, photo_url)')
+      .select('*, usuario:usuarios(id, nombre, apellido, dni, rol, activo, created_at, photo_url)')
       .eq('tarjeta_id', tarjeta.id)
       .order('created_at', { ascending: false });
     if (data) {
@@ -146,7 +146,6 @@ export const TarjetaDetallesModal = ({
           nombre: a.usuario.nombre,
           apellido: a.usuario.apellido,
           dni: a.usuario.dni,
-          contraseña: a.usuario.contraseña || '',
           rol: a.usuario.rol,
           activo: a.usuario.activo,
           fechaCreacion: new Date(a.usuario.created_at),

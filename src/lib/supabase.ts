@@ -7,8 +7,6 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables');
 }
 
-
-// Tipos para las tablas de Supabase
 export interface Database {
   public: {
     Tables: {
@@ -18,9 +16,13 @@ export interface Database {
           nombre: string;
           apellido: string;
           dni: string;
-          contraseña: string;
+          email: string | null;
+          auth_id: string | null;
           rol: 'administrador' | 'usuario';
           activo: boolean;
+          modulo_novedades: boolean;
+          modulo_tareas: boolean;
+          photo_url: string | null;
           created_at: string;
         };
         Insert: {
@@ -28,9 +30,13 @@ export interface Database {
           nombre: string;
           apellido: string;
           dni: string;
-          contraseña: string;
+          email?: string | null;
+          auth_id?: string | null;
           rol: 'administrador' | 'usuario';
           activo?: boolean;
+          modulo_novedades?: boolean;
+          modulo_tareas?: boolean;
+          photo_url?: string | null;
           created_at?: string;
         };
         Update: {
@@ -38,9 +44,13 @@ export interface Database {
           nombre?: string;
           apellido?: string;
           dni?: string;
-          contraseña?: string;
+          email?: string | null;
+          auth_id?: string | null;
           rol?: 'administrador' | 'usuario';
           activo?: boolean;
+          modulo_novedades?: boolean;
+          modulo_tareas?: boolean;
+          photo_url?: string | null;
           created_at?: string;
         };
       };

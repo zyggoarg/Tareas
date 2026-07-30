@@ -8,8 +8,8 @@ interface UserManagementProps {
   usuarios: Usuario[];
   sectores: Sector[];
   proyectos: Proyecto[];
-  onCrearUsuario: (usuario: Omit<Usuario, 'id' | 'fechaCreacion'>) => void;
-  onActualizarUsuario: (id: string, datos: Partial<Omit<Usuario, 'id' | 'fechaCreacion'>>) => void;
+  onCrearUsuario: (usuario: Omit<Usuario, 'id' | 'fechaCreacion'> & { contraseña: string }) => void;
+  onActualizarUsuario: (id: string, datos: Partial<Omit<Usuario, 'id' | 'fechaCreacion'>> & { contraseña?: string }) => void;
   onDesactivarUsuario: (id: string) => void;
   onActualizarSectoresUsuario: (usuarioId: string, sectoresIds: string[]) => void;
   onActualizarProyectosUsuario: (usuarioId: string, proyectosIds: string[]) => void;

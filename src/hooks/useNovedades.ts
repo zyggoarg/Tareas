@@ -40,7 +40,6 @@ export const useNovedades = (proyectoActivoId?: string | null, usuarioActual?: U
             nombre,
             apellido,
             dni,
-            contraseña,
             rol,
             activo,
             created_at
@@ -71,7 +70,6 @@ export const useNovedades = (proyectoActivoId?: string | null, usuarioActual?: U
               nombre,
               apellido,
               dni,
-              contraseña,
               rol,
               activo,
               created_at
@@ -88,7 +86,6 @@ export const useNovedades = (proyectoActivoId?: string | null, usuarioActual?: U
               nombre,
               apellido,
               dni,
-              contraseña,
               rol,
               activo,
               created_at
@@ -117,7 +114,6 @@ export const useNovedades = (proyectoActivoId?: string | null, usuarioActual?: U
               nombre,
               apellido,
               dni,
-              contraseña,
               rol,
               activo,
               created_at
@@ -189,7 +185,6 @@ export const useNovedades = (proyectoActivoId?: string | null, usuarioActual?: U
           nombre: n.creado_por.nombre,
           apellido: n.creado_por.apellido,
           dni: n.creado_por.dni,
-          contraseña: n.creado_por.contraseña,
           rol: n.creado_por.rol as 'administrador' | 'usuario',
           fechaCreacion: new Date(n.creado_por.created_at),
           activo: n.creado_por.activo
@@ -201,7 +196,6 @@ export const useNovedades = (proyectoActivoId?: string | null, usuarioActual?: U
             nombre: lectura.usuario.nombre,
             apellido: lectura.usuario.apellido,
             dni: lectura.usuario.dni,
-            contraseña: lectura.usuario.contraseña,
             rol: lectura.usuario.rol as 'administrador' | 'usuario',
             fechaCreacion: new Date(lectura.usuario.created_at),
             activo: lectura.usuario.activo
@@ -216,7 +210,6 @@ export const useNovedades = (proyectoActivoId?: string | null, usuarioActual?: U
             nombre: comentario.autor.nombre,
             apellido: comentario.autor.apellido,
             dni: comentario.autor.dni,
-            contraseña: comentario.autor.contraseña,
             rol: comentario.autor.rol as 'administrador' | 'usuario',
             fechaCreacion: new Date(comentario.autor.created_at),
             activo: comentario.autor.activo
@@ -251,7 +244,6 @@ export const useNovedades = (proyectoActivoId?: string | null, usuarioActual?: U
             nombre: lectura.usuario.nombre,
             apellido: lectura.usuario.apellido,
             dni: lectura.usuario.dni,
-            contraseña: lectura.usuario.contraseña,
             rol: lectura.usuario.rol as 'administrador' | 'usuario',
             fechaCreacion: new Date(lectura.usuario.created_at),
             activo: lectura.usuario.activo
@@ -388,7 +380,6 @@ export const useNovedades = (proyectoActivoId?: string | null, usuarioActual?: U
           nombre: data.creado_por.nombre,
           apellido: data.creado_por.apellido,
           dni: data.creado_por.dni,
-          contraseña: data.creado_por.contraseña,
           rol: data.creado_por.rol as 'administrador' | 'usuario',
           fechaCreacion: new Date(data.creado_por.created_at),
           activo: data.creado_por.activo

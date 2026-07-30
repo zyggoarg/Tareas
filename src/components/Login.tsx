@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { LogIn, Mail, Lock, AlertCircle } from 'lucide-react';
+import type { LoginResult } from '../hooks/useAuth';
 
 interface LoginProps {
-  onLogin: (email: string, contraseña: string) => Promise<boolean>;
+  onLogin: (email: string, contraseña: string) => Promise<LoginResult>;
 }
 
 export const Login: React.FC<LoginProps> = ({ onLogin }) => {
@@ -22,10 +23,10 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
       return;
     }
 
-    const loginExitoso = await onLogin(email.trim(), contraseña);
+    const resultado = await onLogin(email.trim(), contraseña);
 
-    if (!loginExitoso) {
-      setError('Correo o contraseña incorrectos');
+    if (!resultado.success) {
+      setError(resultado.error || 'Correo o contraseña incorrectos');
     }
 
     setCargando(false);
@@ -36,9 +37,9 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
       <div className="bg-white rounded-2xl shadow-xl p-6 sm:p-8 w-full max-w-md mx-4">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mx-auto mb-6">
-            <img 
-              src="/Rotorc alta calidad.png" 
-              alt="Rotorc Logo" 
+            <img
+              src="/Rotorc alta calidad.png"
+              alt="Rotorc Logo"
               className="h-16 sm:h-20 w-auto object-contain"
             />
           </div>
@@ -52,7 +53,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 sm:mb-6 flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 text-red-600" />
+            <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
             <span className="text-red-700 text-xs sm:text-sm">{error}</span>
           </div>
         )}
@@ -71,6 +72,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 className="w-full pl-10 pr-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="correo@ejemplo.com"
                 disabled={cargando}
+                autoComplete="email"
               />
             </div>
           </div>
@@ -88,6 +90,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 className="w-full pl-10 pr-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Ingrese su contraseña"
                 disabled={cargando}
+                autoComplete="current-password"
               />
             </div>
           </div>

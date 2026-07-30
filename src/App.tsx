@@ -48,6 +48,7 @@ function App() {
     crearUsuario,
     actualizarUsuario,
     actualizarPerfil,
+    cambiarContraseñaPropia,
     desactivarUsuario,
     esAdministrador,
     actualizarSectoresUsuario,
@@ -648,6 +649,7 @@ function App() {
         <ProfileEdit
           usuario={usuarioActual}
           onActualizarPerfil={actualizarPerfil}
+          onCambiarContraseña={cambiarContraseñaPropia}
           onCerrar={() => setMostrarEditarPerfil(false)}
         />
       )}
