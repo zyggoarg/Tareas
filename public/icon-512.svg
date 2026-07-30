@@ -1,0 +1,22 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <!-- Fondo -->
+  <rect width="512" height="512" fill="#3b82f6" rx="85"/>
+
+  <!-- Icono de tablero Kanban simplificado -->
+  <g fill="#ffffff">
+    <!-- Columna 1 -->
+    <rect x="75" y="133" width="93" height="246" rx="10"/>
+    <rect x="75" y="96" width="93" height="21" rx="5"/>
+
+    <!-- Columna 2 -->
+    <rect x="208" y="133" width="93" height="187" rx="10"/>
+    <rect x="208" y="96" width="93" height="21" rx="5"/>
+
+    <!-- Columna 3 -->
+    <rect x="341" y="133" width="93" height="133" rx="10"/>
+    <rect x="341" y="96" width="93" height="21" rx="5"/>
+  </g>
+
+  <!-- Texto R -->
+  <text x="256" y="453" font-family="Arial, sans-serif" font-size="128" font-weight="bold" fill="#ffffff" text-anchor="middle">R</text>
+</svg>
