@@ -521,11 +521,11 @@ export const TarjetaDetallesModal = ({
   const prioridadActual = prioridades.find(p => p.valor === prioridad);
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
       <div className="bg-white rounded-xl max-w-6xl w-full max-h-[95vh] overflow-y-auto shadow-2xl">
         <div className="sticky top-0 bg-white border-b border-gray-200 z-10 rounded-t-xl">
-          <div className="p-6 flex items-start justify-between">
-            <div className="flex-1">
+          <div className="p-4 sm:p-6 flex items-start justify-between">
+            <div className="flex-1 min-w-0">
               {editandoTitulo ? (
                 <input
                   type="text"
@@ -533,22 +533,22 @@ export const TarjetaDetallesModal = ({
                   onChange={(e) => setTitulo(e.target.value)}
                   onBlur={handleGuardarTitulo}
                   onKeyDown={(e) => e.key === 'Enter' && handleGuardarTitulo()}
-                  className="text-2xl font-bold text-gray-900 border-2 border-blue-500 rounded px-2 py-1 w-full focus:outline-none"
+                  className="text-xl sm:text-2xl font-bold text-gray-900 border-2 border-blue-500 rounded px-2 py-1 w-full focus:outline-none"
                   autoFocus
                 />
               ) : (
                 <h2
-                  className="text-2xl font-bold text-gray-900 mb-2 cursor-pointer hover:bg-gray-50 px-2 py-1 rounded"
+                  className="text-xl sm:text-2xl font-bold text-gray-900 mb-2 cursor-pointer hover:bg-gray-50 px-2 py-1 rounded"
                   onClick={() => setEditandoTitulo(true)}
                 >
                   {tarjeta.titulo}
                 </h2>
               )}
-              <p className="text-sm text-gray-500">
+              <p className="text-xs sm:text-sm text-gray-500 px-2">
                 Creada por {tarjeta.creadoPor.nombre} {tarjeta.creadoPor.apellido} • {new Date(tarjeta.fechaCreacion).toLocaleDateString('es-ES')}
               </p>
             </div>
-            <div className="flex items-center gap-2 ml-4">
+            <div className="flex items-center gap-2 ml-2 sm:ml-4">
               {usuarioActual.rol === 'administrador' && (
                 <button
                   onClick={handleEliminarTarjeta}
@@ -568,8 +568,8 @@ export const TarjetaDetallesModal = ({
           </div>
         </div>
 
-        <div className="p-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="p-4 sm:p-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
             <div className="lg:col-span-2 space-y-6">
               <div className="flex flex-wrap gap-3">
                 <div className="flex items-center gap-2">

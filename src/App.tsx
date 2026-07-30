@@ -503,23 +503,25 @@ function App() {
               </div>
 
               {proyectoActivo && (
-                <div className="flex items-center gap-2 ml-4">
+                <div className="flex items-center gap-1 sm:gap-2 ml-2 sm:ml-4">
                   <button
                     onClick={() => modo === 'novedades' ? setMostrarFormNovedad(true) : setMostrarFormTarea(true)}
-                    className="flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2 font-medium transition-colors duration-200 bg-blue-500 hover:bg-blue-600 text-white rounded-lg shadow-md hover:shadow-lg"
+                    className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 font-medium transition-colors duration-200 bg-blue-500 hover:bg-blue-600 text-white rounded-lg shadow-md hover:shadow-lg"
+                    title={modo === 'novedades' ? 'Nueva Novedad' : 'Nueva Tarea'}
                   >
                     <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
-                    <span className="text-sm sm:text-base font-medium">
+                    <span className="hidden sm:inline text-sm sm:text-base font-medium">
                       {modo === 'novedades' ? 'Nueva Novedad' : 'Nueva Tarea'}
                     </span>
                   </button>
                   {modo === 'tareas' && (
                     <button
                       onClick={() => setMostrarNuevoTableroModal(true)}
-                      className="flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2 font-medium transition-colors duration-200 bg-green-500 hover:bg-green-600 text-white rounded-lg shadow-md hover:shadow-lg"
+                      className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 font-medium transition-colors duration-200 bg-green-500 hover:bg-green-600 text-white rounded-lg shadow-md hover:shadow-lg"
+                      title="Nuevo Tablero"
                     >
                       <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
-                      <span className="text-sm sm:text-base font-medium">
+                      <span className="hidden sm:inline text-sm sm:text-base font-medium">
                         Nuevo Tablero
                       </span>
                     </button>

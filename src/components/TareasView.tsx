@@ -419,14 +419,14 @@ export const TareasView = ({
 
       {!tableroActivo ? (
         <div className="flex-1">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">Tableros de Tareas</h2>
+          <div className="flex items-center justify-between mb-4 sm:mb-6">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Tableros de Tareas</h2>
             <button
               onClick={() => setMostrarModalNuevoTablero(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm sm:text-base"
             >
-              <Plus className="w-5 h-5" />
-              Nuevo Tablero
+              <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+              <span className="hidden sm:inline">Nuevo </span>Tablero
             </button>
           </div>
 

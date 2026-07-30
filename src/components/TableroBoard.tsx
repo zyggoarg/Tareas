@@ -75,72 +75,76 @@ export const TableroBoard = ({
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between mb-6 bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={onVolverATableros}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            title="Volver a tableros"
-          >
-            <ArrowLeft className="w-5 h-5 text-gray-600" />
-          </button>
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">{tablero.nombre}</h2>
-            {tablero.descripcion && (
-              <p className="text-sm text-gray-500 mt-1">{tablero.descripcion}</p>
-            )}
-          </div>
-        </div>
-        <div className="flex items-center gap-4">
-          {/* Selector de vista */}
-          <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
+      <div className="mb-4 sm:mb-6 bg-white p-3 sm:p-4 rounded-lg shadow-sm border border-gray-200">
+        <div className="flex items-center justify-between gap-2">
+          {/* Botón volver + título */}
+          <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
             <button
-              onClick={() => setTipoVista('kanban')}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-md transition-colors ${
-                tipoVista === 'kanban'
-                  ? 'bg-white text-blue-600 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-              title="Vista Kanban"
+              onClick={onVolverATableros}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
+              title="Volver a tableros"
             >
-              <LayoutGrid className="w-4 h-4" />
-              <span className="text-sm font-medium">Kanban</span>
+              <ArrowLeft className="w-5 h-5 text-gray-600" />
             </button>
-            <button
-              onClick={() => setTipoVista('estados')}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-md transition-colors ${
-                tipoVista === 'estados'
-                  ? 'bg-white text-blue-600 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-              title="Vista por Estados"
-            >
-              <ListIcon className="w-4 h-4" />
-              <span className="text-sm font-medium">Estados</span>
-            </button>
-            <button
-              onClick={() => setTipoVista('gantt')}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-md transition-colors ${
-                tipoVista === 'gantt'
-                  ? 'bg-white text-blue-600 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-              title="Vista Gantt"
-            >
-              <Calendar className="w-4 h-4" />
-              <span className="text-sm font-medium">Gantt</span>
-            </button>
+            <div className="min-w-0">
+              <h2 className="text-lg sm:text-2xl font-bold text-gray-900 truncate">{tablero.nombre}</h2>
+              {tablero.descripcion && (
+                <p className="text-xs sm:text-sm text-gray-500 mt-0.5 sm:mt-1 hidden sm:block truncate">{tablero.descripcion}</p>
+              )}
+            </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-500">
-              Proyecto: <span className="font-medium text-gray-700">{tablero.proyecto.nombre}</span>
-            </span>
-            {tablero.sector && (
+          {/* Selector de vista + info proyecto */}
+          <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
+            <div className="flex items-center gap-0.5 sm:gap-2 bg-gray-100 rounded-lg p-1">
+              <button
+                onClick={() => setTipoVista('kanban')}
+                className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 rounded-md transition-colors ${
+                  tipoVista === 'kanban'
+                    ? 'bg-white text-blue-600 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+                title="Vista Kanban"
+              >
+                <LayoutGrid className="w-4 h-4" />
+                <span className="hidden sm:inline text-sm font-medium">Kanban</span>
+              </button>
+              <button
+                onClick={() => setTipoVista('estados')}
+                className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 rounded-md transition-colors ${
+                  tipoVista === 'estados'
+                    ? 'bg-white text-blue-600 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+                title="Vista por Estados"
+              >
+                <ListIcon className="w-4 h-4" />
+                <span className="hidden sm:inline text-sm font-medium">Estados</span>
+              </button>
+              <button
+                onClick={() => setTipoVista('gantt')}
+                className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 rounded-md transition-colors ${
+                  tipoVista === 'gantt'
+                    ? 'bg-white text-blue-600 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+                title="Vista Gantt"
+              >
+                <Calendar className="w-4 h-4" />
+                <span className="hidden sm:inline text-sm font-medium">Gantt</span>
+              </button>
+            </div>
+
+            <div className="hidden md:flex items-center gap-2">
               <span className="text-sm text-gray-500">
-                | Sector: <span className="font-medium text-gray-700">{tablero.sector.nombre}</span>
+                Proyecto: <span className="font-medium text-gray-700">{tablero.proyecto.nombre}</span>
               </span>
-            )}
+              {tablero.sector && (
+                <span className="text-sm text-gray-500">
+                  | Sector: <span className="font-medium text-gray-700">{tablero.sector.nombre}</span>
+                </span>
+              )}
+            </div>
           </div>
         </div>
       </div>
