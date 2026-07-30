@@ -361,42 +361,55 @@ export const useAuth = () => {
     }
   };
 
-  const actualizarUsuario = async (id: string, datosActualizados: Partial<Omit<Usuario, 'id' | 'fechaCreacion'>>) => {
-    try {
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const actualizarUsuario = async (
+  id: string,
+  datosActualizados: Partial<
+    Omit<Usuario, "id" | "fechaCreacion">
+  >,
+) => {
+  try {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
 
-      const apiUrl = `${supabaseUrl}/functions/v1/actualizar-usuario`;
-
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${supabaseAnonKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          usuarioId: id,
-          datos: datosActualizados
-        })
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Error al actualizar usuario');
-      }
-
-      await cargarUsuarios();
-
-      if (usuarioActual && usuarioActual.id === id) {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-          await cargarPerfilUsuario(session.user);
-        }
-      }
-    } catch (error) {
-      throw error;
+    if (!session) {
+      throw new Error(
+        "La sesión venció. Cerrá sesión e ingresá nuevamente.",
+      );
     }
-  };
+
+    const { data, error } = await supabase.functions.invoke(
+      "actualizar-usuario",
+      {
+        body: {
+          usuarioId: id,
+          datos: datosActualizados,
+        },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      },
+    );
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    if (!data?.success) {
+      throw new Error(
+        data?.error || "Error al actualizar el usuario",
+      );
+    }
+
+    await cargarUsuarios();
+
+    if (usuarioActual && usuarioActual.id === id) {
+      await cargarPerfilUsuario(session.user);
+    }
+  } catch (error) {
+    throw error;
+  }
+};
 
   const actualizarPerfil = async (datos: {
     nombre?: string;
